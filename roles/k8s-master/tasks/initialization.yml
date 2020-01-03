@@ -1,0 +1,14 @@
+- name: initialize the cluster
+  command: kubeadm init --control-plane-endpoint "192.168.88.111:6666" --upload-certs --pod-network-cidr=10.244.0.0/16 --kubernetes-version stable-1.16
+  args:
+    creates: /root/cluster_initialized.txt
+  register: kubeadm_init_raw
+  when: "'kubec1' in ansible_fqdn"
+
+- name: save kubeadm init output to a file
+  copy:
+    content: "stdout:\n{{ kubeadm_init_raw.stdout }}\n\nstderr:\n{{ kubeadm_init_raw.stderr }}"
+    dest: /root/cluster_initialized.txt
+  when:
+  - kubeadm_init_raw.changed
+  - "'kubec1' in ansible_fqdn"

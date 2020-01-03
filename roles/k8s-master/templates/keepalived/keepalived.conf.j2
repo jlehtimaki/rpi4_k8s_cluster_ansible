@@ -1,0 +1,25 @@
+vrrp_script chk_haproxy {
+    script "pidof haproxy"
+    interval 2
+}
+
+vrrp_instance VI_1 {
+    interface eth0
+    state {{ hostvars[ansible_fqdn].keepalive_role }}
+    {% if "MASTER" in hostvars[ansible_fqdn].keepalive_role %}
+priority 200
+    {% else %}
+priority 100
+    {% endif %}
+
+    virtual_router_id 100
+    unicast_src_ip {{ ansible_default_ipv4.address }}
+    unicast_peer {
+{% for host in servers if hostvars[host].ansible_default_ipv4.address != ansible_default_ipv4.address %}
+        {{ hostvars[host].ansible_default_ipv4.address }}
+{% endfor %}
+    }
+    virtual_ipaddress {
+        192.168.88.111 dev eth0 label eth0:vip
+    }
+}

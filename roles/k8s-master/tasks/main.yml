@@ -1,0 +1,39 @@
+- name: Test if initialised
+  shell: docker ps |grep -v CONTAINER
+  register: docker_ps
+  ignore_errors: True
+
+- name: Include HA Proxy tasks
+  include: haproxy.yml
+  tags: haproxy
+
+- name: Include Keepalived tasks
+  include: keepalived.yml
+  tags: keepalived
+
+- name: Include initialization
+  include: initialization.yml
+  tags: init
+  when: docker_ps.stderr
+
+- name: Include join of other masters
+  include: join.yml
+  tags: join-master
+  when: docker_ps.stderr
+
+- name: Create master kube config folder
+  file:
+    path: /root/.kube
+    owner: root
+    group: root
+    state: directory
+
+- name: Copy kubeconfig
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+
+- name: Include Networking
+  include: network.yml
+  tags: network

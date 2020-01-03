@@ -1,0 +1,23 @@
+- name: Install HAProxy
+  apt:
+    name: haproxy
+    state: present
+
+- name: Configure HAProxy
+  vars:
+    servers: "{{ groups['masters'] }}"
+  template:
+    src: haproxy/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  register: config_change
+
+- name: Haproxy restart
+  systemd:
+    state: restarted
+    name: haproxy
+  when: config_change is changed
+
+- name: Haproxy Running
+  systemd:
+    state: started
+    name: haproxy
