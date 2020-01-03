@@ -2,8 +2,6 @@
   become: yes
   vars:
     servers: "{{ groups['masters'] }}"
-  environment:
-    KUBELET_EXTRA_ARGS: --cgroup-driver=systemd
   roles:
     - common
     - k8s-common

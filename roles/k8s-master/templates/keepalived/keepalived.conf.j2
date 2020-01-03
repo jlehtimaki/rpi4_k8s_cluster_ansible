@@ -20,6 +20,6 @@ priority 100
 {% endfor %}
     }
     virtual_ipaddress {
-        192.168.88.111 dev eth0 label eth0:vip
+        {{ kubernetes_endpoint }} dev eth0 label eth0:vip
     }
 }

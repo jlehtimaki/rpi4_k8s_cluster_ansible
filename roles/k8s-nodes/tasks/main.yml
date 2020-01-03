@@ -1,0 +1,4 @@
+- name: Join cluster
+  command: "{{ join_command }}"
+  register: kubeadm_join
+  when: "ansible_fqdn not in get_nodes"

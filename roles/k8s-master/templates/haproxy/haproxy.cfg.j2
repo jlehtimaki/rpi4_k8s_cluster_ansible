@@ -26,7 +26,7 @@ defaults
 
 frontend https
     mode tcp
-    bind *:6666
+    bind *:{{ haproxy_port }}
     default_backend k8s-masters-api
 
 backend k8s-masters-api

@@ -5,7 +5,7 @@
     regexp: '.*{{ item }}$'
   with_items: "{{ groups.all }}"
 
-- name: Update host name
+- name: Update hostname
   hostname:
     name: "{{ inventory_hostname }}"
 

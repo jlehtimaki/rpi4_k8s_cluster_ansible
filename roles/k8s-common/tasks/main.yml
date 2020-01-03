@@ -14,11 +14,6 @@
     state: present
     filename: 'docker-ce'
 
-- name: Install Containerd
-  apt:
-    name: containerd
-    state: present
-
 - name: Install Docker
   apt:
     name: ['docker-ce=5:18.09.9~3-0~ubuntu-xenial', 'docker-ce-cli=5:18.09.9~3-0~ubuntu-xenial']
@@ -33,32 +28,27 @@
     mode: '0600'
   register: daemon_config
 
-- name: add Kubernetes apt-key
+- name: Add Kubernetes apt-key
   apt_key:
     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
     state: present
 
-- name: add Kubernetes' APT repository
+- name: Add Kubernetes' APT repository
   apt_repository:
    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
    state: present
    filename: 'kubernetes'
 
-- name: install kubelet
+- name: Install kubelet
   apt:
-    name: kubelet=1.16.4-00
+    name: "kubelet={{ kubeadm_version }}"
     state: present
     update_cache: true
 
-- name: install kubeadm
+- name: Install kubeadm
   apt:
-    name: kubeadm=1.16.4-00
+    name: "kubeadm={{ kubeadm_version }}"
     state: present
-
-- name: Enable containerd
-  service:
-    name: containerd
-    enabled: yes
 
 - name: install nfs-common
   apt:
