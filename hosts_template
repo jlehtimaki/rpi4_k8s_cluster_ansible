@@ -1,0 +1,9 @@
+[masters]
+kube-master-1.k8s.localhost   ansible_host=192.168.1.10    keepalive_role=MASTER
+kube-master-2.k8s.localhost   ansible_host=192.168.1.11    keepalive_role=SLAVE
+kube-master-3.k8s.localhost   ansible_host=192.168.1.12    keepalive_role=SLAVE
+
+[nodes]
+kube-node-1.k8s.localhost   ansible_host=192.168.1.20
+kube-node-2.k8s.localhost   ansible_host=192.168.1.21
+kube-node-3.k8s.localhost   ansible_host=192.168.1.22
