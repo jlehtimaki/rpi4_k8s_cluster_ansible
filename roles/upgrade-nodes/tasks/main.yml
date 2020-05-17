@@ -1,0 +1,43 @@
+- name: Check kubeadm version
+  command: "kubeadm version"
+  register: current_kubeadm_version
+
+- name: Update repositories & Install new kubeadm
+  shell: "apt-get update && apt-get install  -y --allow-change-held-packages kubeadm={{ kubeadm_version }}"
+  when:
+    - "k8s_version not in current_kubeadm_version.stdout"
+
+- name: Get Node K8S version
+  shell: "kubectl get nodes | grep {{ ansible_fqdn }}"
+  delegate_to: "{{ servers[0] }}"
+  register: node_version
+
+- name: Drain the node
+  command: "kubectl drain {{ ansible_fqdn }} --ignore-daemonsets"
+  delegate_to: "{{ servers[0] }}"
+  when:
+    - "k8s_version not in node_version.stdout"
+
+- name: Upgrade worker node
+  command: "kubeadm upgrade node"
+  when:
+    - "k8s_version not in node_version.stdout"
+
+- name: Upgrade kubelet and kubectl
+  shell: "apt-get update && apt-get install  -y --allow-change-held-packages kubelet={{ kubeadm_version }} kubectl={{ kubeadm_version }} --allow-downgrades"
+  register: kubelet_kubectl_updated
+  when:
+    - "k8s_version not in node_version.stdout"
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+  when:
+    - kubelet_kubectl_updated.changed
+
+- name: Uncordon primary node
+  command: "kubectl uncordon {{ ansible_fqdn }}"
+  delegate_to: "{{ servers[0] }}"
+  when:
+    - "k8s_version not in node_version.stdout"

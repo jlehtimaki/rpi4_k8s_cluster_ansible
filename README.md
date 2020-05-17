@@ -44,3 +44,9 @@ First run playbook for masters then to nodes.
 `ansible-playbook k8s-master.yml`
 ### Nodes
 `ansible-playbook k8s-nodes.yml`
+
+### Upgrade 
+Set the desired versions into the upgrade-cluster.yml file and shoot:
+```shell script
+ansible-playbook upgrade-cluster.yml
+```
