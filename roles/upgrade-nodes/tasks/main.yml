@@ -13,7 +13,7 @@
   register: node_version
 
 - name: Drain the node
-  command: "kubectl drain {{ ansible_fqdn }} --ignore-daemonsets"
+  command: "kubectl drain {{ ansible_fqdn }} --ignore-daemonsets  --delete-local-data"
   delegate_to: "{{ servers[0] }}"
   when:
     - "k8s_version not in node_version.stdout"

@@ -2,8 +2,8 @@
   become: yes
   serial: 1
   vars:
-    kubeadm_version: "1.17.5-00"
-    k8s_version: "v1.17.5"
+    kubeadm_version: "1.18.3-00"
+    k8s_version: "v1.18.3"
     servers: "{{ groups['masters'] }}"
   roles:
     - upgrade-masters
@@ -14,8 +14,8 @@
   become: yes
   serial: 1
   vars:
-    kubeadm_version: "1.17.5-00"
-    k8s_version: "v1.17.5"
+    kubeadm_version: "1.18.3-00"
+    k8s_version: "v1.18.3"
     servers: "{{ groups['masters'] }}"
   roles:
     - upgrade-nodes

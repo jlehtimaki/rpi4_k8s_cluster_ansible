@@ -5,61 +5,59 @@
 - name: Update repositories & Install new kubeadm
   shell: "apt-get update && apt-get install  -y --allow-change-held-packages kubeadm={{ kubeadm_version }}"
   when:
-    - "k8s_version not in current_kubeadm_version"
-
-- name: Check new kubeadm version
-  command: "kubeadm version"
-  register: new_kubeadm_version
-  when:
     - "k8s_version not in current_kubeadm_version.stdout"
 
-- name: Drain the node
+- name: Check kubernetes version
+  shell: "kubectl get nodes | grep {{ ansible_fqdn }}"
+  register: controller_version
+
+- name: Drain the primary contoller node
   command: "kubectl drain {{ ansible_fqdn }} --ignore-daemonsets"
   when:
     - "servers[0] in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Kubeadm upgrade plan
+- name: Upgrade primary controller node - plan
   command: "kubeadm upgrade plan"
   when:
     - "servers[0] in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Kubeadm upgrade apply
+- name: Upgrade primary controller node - apply
   command: "kubeadm upgrade apply {{ k8s_version }} -y"
   when:
     - "servers[0] in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Uncordon primary node
+- name: Uncordon primary controller node
   command: "kubectl uncordon {{ ansible_fqdn }}"
   when:
     - "servers[0] in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Drain the other nodes
+- name: Drain the controller node
   command: "kubectl drain {{ ansible_fqdn }} --ignore-daemonsets"
   when:
     - "servers[0] not in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Upgrade other masters - apply
+- name: Upgrade controller node - apply
   command: "kubeadm upgrade node"
   when:
     - "servers[0] not in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
-- name: Uncordon primary node
+- name: Uncordon controller node
   command: "kubectl uncordon {{ ansible_fqdn }}"
   when:
     - "servers[0] not in ansible_fqdn"
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
 - name: Upgrade kubelet and kubectl
   shell: "apt-get update && apt-get install  -y --allow-change-held-packages kubelet={{ kubeadm_version }} kubectl={{ kubeadm_version }}"
   register: kubelet_kubectl_updated
   when:
-    - "k8s_version not in current_kubeadm_version.stdout"
+    - "k8s_version not in controller_version.stdout"
 
 - name: Restart kubelet
   systemd:
