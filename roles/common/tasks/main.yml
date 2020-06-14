@@ -24,8 +24,8 @@
 
 - name: Wait for the reboot to complete if there was a change.
   wait_for_connection:
-    connect_timeout: 20
+    connect_timeout: 40
     sleep: 5
     delay: 5
-    timeout: 300
+    timeout: 600
   when: reboot_required is changed
