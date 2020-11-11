@@ -1,4 +1,4 @@
-kubeadm_version: 1.18.3-00
+kubeadm_version: 1.18.10-00
 kubernetes_version: stable-1.18
 kubernetes_endpoint: 192.168.88.111
 haproxy_port: 6666

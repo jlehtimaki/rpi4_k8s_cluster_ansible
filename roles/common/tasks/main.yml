@@ -9,12 +9,31 @@
   hostname:
     name: "{{ inventory_hostname }}"
 
-- name: Enable memory control group subsystem
+- name: Check if cmdline.txt exists
+  stat:
+    path: /boot/firmware/cmdline.txt
+  register: cmdline_stat
+
+- name: Check if cmdline.txt exists
+  stat:
+    path: /boot/firmware/nobtcmd.txt
+  register: nobtcmd_stat
+
+- name: Enable memory control group subsystem nobtcmd.txt
   replace:
     path: /boot/firmware/nobtcmd.txt
     regexp: '(fixrtc)$'
     replace: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
   register: reboot_required
+  when: nobtcmd_stat.stat.exists
+
+- name: Enable memory control group subsystem cmdline.txt
+  replace:
+    path: /boot/firmware/cmdline.txt
+    regexp: '(fixrtc)$'
+    replace: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+  register: reboot_required
+  when: cmdline_stat.stat.exists
 
 - name: Reboot immediately if there was a change.
   shell: "sleep 5 && reboot"
