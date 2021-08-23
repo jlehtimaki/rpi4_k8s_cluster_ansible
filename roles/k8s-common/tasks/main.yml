@@ -16,7 +16,7 @@
 
 - name: Install Docker
   apt:
-    name: ['docker-ce=5:19.03.*', 'docker-ce-cli=5:19.03.*']
+    name: ['docker-ce=5:20.10.*', 'docker-ce-cli=5:20.10.*']
     state: present
 
 - name: Docker deamon config
@@ -35,7 +35,7 @@
 
 - name: Add Kubernetes' APT repository
   apt_repository:
-   repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+   repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
    state: present
    filename: 'kubernetes'
 

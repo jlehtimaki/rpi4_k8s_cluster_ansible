@@ -1,5 +1,5 @@
-kubeadm_version: 1.18.10-00
-kubernetes_version: stable-1.18
+kubeadm_version: 1.22.0-00
+kubernetes_version: stable-1.22
 kubernetes_endpoint: 192.168.88.111
 haproxy_port: 6666
 pod_cidr: 10.244.0.0/16
