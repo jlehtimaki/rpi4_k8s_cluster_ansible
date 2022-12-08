@@ -1,5 +1,5 @@
 - name: Test if initialised
-  shell: docker ps |grep -v CONTAINER
+  shell: crictl ps |grep -v CONTAINER
   register: docker_ps
   ignore_errors: True
 
@@ -14,12 +14,12 @@
 - name: Include initialization
   include: initialization.yml
   tags: init
-  when: docker_ps.stderr
+  when: docker_ps.stdout | length <= 0
 
 - name: Include join of other masters
   include: join.yml
   tags: join-master
-  when: docker_ps.stderr
+  when: docker_ps.stdout | length <= 0
 
 - name: Create master kube config folder
   file:
@@ -37,3 +37,7 @@
 - name: Include Networking
   include: network.yml
   tags: network
+
+# - name: Kubernetes config
+#   include: kubeadm.yml
+#   tags: kubeadm

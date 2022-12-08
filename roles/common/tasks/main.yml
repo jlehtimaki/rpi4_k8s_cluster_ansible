@@ -14,26 +14,32 @@
     path: /boot/firmware/cmdline.txt
   register: cmdline_stat
 
-- name: Check if cmdline.txt exists
-  stat:
-    path: /boot/firmware/nobtcmd.txt
-  register: nobtcmd_stat
-
-- name: Enable memory control group subsystem nobtcmd.txt
-  replace:
-    path: /boot/firmware/nobtcmd.txt
-    regexp: '(fixrtc)$'
-    replace: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
-  register: reboot_required
-  when: nobtcmd_stat.stat.exists
-
 - name: Enable memory control group subsystem cmdline.txt
   replace:
     path: /boot/firmware/cmdline.txt
-    regexp: '(fixrtc)$'
-    replace: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
+    regexp: 'fixrtc quiet splash'
+    replace: 'fixrtc cgroup_enable=memory quiet splash'
   register: reboot_required
   when: cmdline_stat.stat.exists
+
+- name: Disable Swap
+  shell: "swapoff -a"
+  
+- name: Write modprobe for Containerd
+  copy:
+    src: containerd.conf
+    dest: /etc/modules-load.d/containerd.conf
+    owner: root
+    group: root
+  register: reboot_required
+
+- name: Write modprobe for Kubernetes
+  copy:
+    src: kubernetes.conf
+    dest: /etc/sysctl.d/kubernetes.conf
+    owner: root
+    group: root
+  register: reboot_required
 
 - name: Reboot immediately if there was a change.
   shell: "sleep 5 && reboot"

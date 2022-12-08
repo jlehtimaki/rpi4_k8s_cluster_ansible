@@ -1,0 +1,10 @@
+- name: Copy Cluster Configuration file
+  copy:
+    src: clusterconfiguration.yml
+    dest: /root/clusterconfiguration.yml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Controller Manager
+  shell: kubeadm init --config clusterconfiguration.yml

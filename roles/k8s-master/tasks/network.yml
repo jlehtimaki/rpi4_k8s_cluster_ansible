@@ -1,10 +1,33 @@
-- name: Check if Weave is being used
-  shell: docker ps | grep weave
+- name: Check if weave is being used
+  shell: crictl ps | grep weave
   register: weave_running
   ignore_errors: True
 
-- name: Install Weave CNI plugin
-  shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+- name: Install weave CNI plugin
+  shell: kubectl apply -f https://github.com/weaveworks/weave/releases/download/latest_release/weave-daemonset-k8s-1.11.yaml
   when:
-    - "servers[0] in ansible_fqdn"
-    - weave_running.stderr
+  - "servers[0] in ansible_fqdn"
+  - weave_running.stdout | length <= 0
+
+# - name: Check if flannel is being used
+#   shell: crictl ps | grep flannel
+#   register: flannel_running
+#   ignore_errors: True
+
+# - name: Install flannel CNI plugin
+#   shell: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+#   when:
+#   - "servers[0] in ansible_fqdn"
+#   - flannel_running.stdout | length <= 0
+
+# - name: Check if calico is being used
+#   shell: crictl ps | grep calico
+#   register: calico_running
+#   ignore_errors: True
+
+# - name: Install calico CNI plugin
+#   shell: kubectl apply -f https://raw.githubusercontent.com/calico-io/calico/master/Documentation/kube-calico.yml
+#   shell: 
+#   when:
+#   - "servers[0] in ansible_fqdn"
+#   - calico_running.stdout | length <= -1

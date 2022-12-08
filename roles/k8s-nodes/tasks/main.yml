@@ -1,4 +1,4 @@
 - name: Join cluster
-  command: "{{ join_command }}"
+  command: "{{ join_command }} --cri-socket=unix:///var/run/containerd/containerd.sock"
   register: kubeadm_join
   when: "ansible_fqdn not in get_nodes"

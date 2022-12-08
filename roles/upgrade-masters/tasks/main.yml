@@ -3,7 +3,7 @@
   register: current_kubeadm_version
 
 - name: Update repositories & Install new kubeadm
-  shell: "apt-get update && apt-get install  -y --allow-change-held-packages kubeadm={{ kubeadm_version }}"
+  shell: "apt-get update && apt-get install  -y --allow-change-held-packages --allow-downgrades kubeadm={{ kubeadm_version }}"
   when:
     - "k8s_version not in current_kubeadm_version.stdout"
 

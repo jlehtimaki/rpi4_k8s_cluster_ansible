@@ -1,32 +1,92 @@
-- name: install APT Transport HTTPS
+- name: install needed packages
   apt:
-    name: apt-transport-https
+    name: [apt-transport-https,linux-modules-extra-raspi]
     state: present
 
-- name: Add Docker-CE cert
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
+# This is Deprecated since we will be using Containerd.io
+# - name: Add Docker-CE cert
+#   apt_key:
+#     url: https://download.docker.com/linux/ubuntu/gpg
+#     state: present
 
-- name: Add Docker-CE repo
-  apt_repository:
-    repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu xenial stable
-    state: present
-    filename: 'docker-ce'
+# - name: Add Docker-CE repo
+#   apt_repository:
+#     repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu jammy stable
+#     state: present
+#     filename: 'docker-ce'
 
-- name: Install Docker
+# - name: Add libcontainers stable cert
+#   apt_key:
+#     url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key
+#     state: present
+
+# - name: Add criostable cert
+#   apt_key:
+#     url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.25/xUbuntu_22.04/Release.key
+#     state: present
+
+# - name: Add libcontainers stable repo
+#   apt_repository:
+#     repo: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/ /
+#     state: present
+#     filename: 'libcontainers-table.list'
+
+# - name: Add Crio stable repo
+#   apt_repository:
+#     repo: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.25/xUbuntu_22.04/ /
+#     state: present
+#     filename: 'crio-lib-stable.list'
+
+
+# - name: Install Crio
+#   apt:
+#     name: ['cri-o', 'cri-o-runc', 'containernetworking-plugins']
+#     state: present
+
+- name: Install Containerd
   apt:
-    name: ['docker-ce=5:20.10.*', 'docker-ce-cli=5:20.10.*']
+    name: ['containerd']
     state: present
 
-- name: Docker deamon config
+- name: Create a containerd directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Check if the containerd default configuration is in place
+  stat:
+    path: /etc/containerd/config.toml
+  register: containerd_config
+
+- name: Make Default Containerd configuration file
+  shell: "containerd config default > /etc/containerd/config.toml"
+  register: daemon_config
+  when: containerd_config.stat.exists == False
+
+- name: Alter the containerd configuration file
+  replace:
+    path: /etc/containerd/config.toml
+    regexp: 'SystemdCgroup \= false'
+    replace: 'SystemdCgroup = true'
+  register: daemon_config
+
+- name: Add default socket to crictl
   copy:
-    src: daemon.json
-    dest: /etc/docker/daemon.json
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
     owner: root
     group: root
-    mode: '0600'
   register: daemon_config
+
+# - name: Docker deamon config
+#   copy:
+#     src: daemon.json
+#     dest: /etc/docker/daemon.json
+#     owner: root
+#     group: root
+#     mode: '0600'
+#   register: daemon_config
 
 - name: Add Kubernetes apt-key
   apt_key:
@@ -35,7 +95,7 @@
 
 - name: Add Kubernetes' APT repository
   apt_repository:
-   repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+   repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
    state: present
    filename: 'kubernetes'
 
@@ -44,6 +104,13 @@
     name: "kubelet={{ kubeadm_version }}"
     state: present
     update_cache: true
+
+# - name: Add Kubelet/Kubeadm configuration
+#   copy:
+#     src: kubeadm.conf
+#     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+#     owner: root
+#     group: root
 
 - name: Install kubeadm
   apt:
@@ -55,8 +122,8 @@
     name: nfs-common
     state: present
 
-- name: Restart Docker
+- name: Restart ContainerD
   systemd:
-    name: docker
+    name: containerd
     state: restarted
   when: daemon_config is changed
